@@ -4,7 +4,7 @@ import os
 import shutil
 
 def convert_format(root_data, dst_dir):
-    
+
     label_dirs = glob.glob(root_data+"/*")
     imgs = []
     name_labels = []
@@ -21,7 +21,7 @@ def convert_format(root_data, dst_dir):
         dst_label = dst_dir+'/'+name_label
         if os.path.exists(dst_label):
             shutil.rmtree(dst_label)
-        
+
         os.makedirs(dst_label)
 
         for img_path in img_paths:
@@ -30,5 +30,6 @@ def convert_format(root_data, dst_dir):
             cv2.imwrite(dst_label+'/{}.jpg'.format(name_img), img)
 
 if __name__=="__main__":
-    
-    convert_format("/home/ndtuan/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val", "/home/ndtuan/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val1")
+
+    #convert_format("/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train", "/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train1")
+    convert_format("/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val", "/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val1")

@@ -1,11 +1,12 @@
 from __future__ import division
 
 import tensorflow as tf
-import random 
+import random
 import pathlib
 
-train_data_root = "/home/ndtuan/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train1"
-val_data_root = "/home/ndtuan/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val1"
+train_data_root = "/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train1"
+val_data_root = "/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val1"
+NUM_CLASSES = 5
 
 def get_img_paths(data_root):
     data_root = pathlib.Path(data_root)
@@ -16,15 +17,21 @@ def get_img_paths(data_root):
 
     label_names = sorted(item.name for item in data_root.glob('*/') if item.is_dir() )
     label_to_index = dict((name, index) for index, name in enumerate(label_names))
-    
+
     all_img_labels = [label_to_index[pathlib.Path(path).parent.name] for path in all_data_paths]
+    tmp = [[0 for i in range(NUM_CLASSES)] for j in range(len(all_img_labels))]
+    print(tmp[0][0])
+    for i in range(len(tmp)):
+        tmp[i][all_img_labels[i]] = 1
+
+    print(tmp[0:2])
     print("#Label: ", len(all_img_labels))
-    return all_data_paths, all_img_labels
+    return all_data_paths, tmp
 
 def preprocess_image(img):
     print(img)
     img = tf.image.decode_jpeg(img, channels=3)
-    img = tf.random_crop(img, [224, 244, 3])
+    img = tf.random_crop(img, [224, 224, 3])
     print(img.dtype)
     img = tf.cast(img, tf.float32)
     img = tf.divide(img, tf.constant(255.0))
@@ -49,11 +56,12 @@ def gen_dataset(img_paths, label_imgs, batch_size=32):
 
 def load_and_get_iter_dataset(data_root, batch_size=32):
     data_paths, img_labels = get_img_paths(data_root)
+    len_data = len(data_paths)
     ds = gen_dataset(data_paths, img_labels, batch_size)
-    return ds.make_one_shot_iterator().get_next()
+    return ds.make_one_shot_iterator().get_next(), len_data
 
 if __name__=="__main__":
-    
+
     val_data_paths, val_img_labels = get_img_paths(val_data_root)
     print(val_data_paths)
     ds = gen_dataset(val_data_paths, val_img_labels)
