@@ -31,5 +31,5 @@ def convert_format(root_data, dst_dir):
 
 if __name__=="__main__":
 
-    #convert_format("/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train", "/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train1")
+    convert_format("/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train", "/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/train1")
     convert_format("/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val", "/home/robot/IQA/pytorch-image-quality-param-ctrl/deepbiq/dataset/val1")

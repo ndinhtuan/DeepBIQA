@@ -3,8 +3,14 @@ import tensorflow as tf
 import cv2
 from load_data import load_and_get_iter_dataset, train_data_root, val_data_root
 import numpy as np
+import shutil
+import os
 
-def train(num_classes, data_root, epochs=100):
+def train(num_classes, train_data_root, val_data_root, epochs=100, log_dir="log_summary"):
+
+    if os.path.exists(log_dir):
+        shutil.rmtree(log_dir)
+    best_acc = 0.0
 
     inputs = tf.placeholder(tf.float32, [None, 224,224,3])
     outputs = tf.placeholder(tf.float32, [None, num_classes])
@@ -16,19 +22,46 @@ def train(num_classes, data_root, epochs=100):
     train = tf.train.AdamOptimizer(learning_rate=1e-5).minimize(loss)
     init=tf.global_variables_initializer()
 
-    iter_dataset, len_data = load_and_get_iter_dataset(data_root)
-    with tf.Session() as sess:
+    iter_dataset, len_data = load_and_get_iter_dataset(train_data_root)
+    val_iter_dataset, val_len_data = load_and_get_iter_dataset(val_data_root)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.85)
+
+    saver = tf.train.Saver()
+    save_dir = 'checkpoints/'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    save_path = os.path.join(save_dir, 'best_validation')
+
+
+    with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
+        summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
+
         with tf.device("/gpu:0"):
             sess.run(init)
             sess.run(model.pretrained())
+            summary = tf.Summary()
+            summary1 = tf.Summary()
+            step = 0
+
             for j in range(epochs):
 
                 for i in range(int(np.ceil(len_data/32))):
+                    step += 1
                     img, label = sess.run(iter_dataset)
                     print(len(img))
                     _loss, _ = sess.run([loss, train], {inputs: img, outputs: label})
+                    summary.value.add(tag='loss/train', simple_value=_loss)
+                    summary_writer.add_summary(summary, step)
                     print("Loss: ", _loss)
-                val(5, iter_dataset, len_data, model, sess, inputs)
+                acc = val(5, val_iter_dataset, val_len_data, model, sess, inputs)
+                if best_acc < acc:
+                    bes_acc = acc
+                    saver.save(sess=sess, save_path=save_path)
+
+                summary1.value.add(tag='acc/test', simple_value=acc)
+                summary_writer.add_summary(summary1, j)
+
 
 def val(num_classes, iter_dataset, len_data, model, sess, inputs):
 
@@ -44,7 +77,9 @@ def val(num_classes, iter_dataset, len_data, model, sess, inputs):
             num_samples += len(softmax)
             #print(mi)
 
-    print(num_rights/num_samples)
+    acc = num_rights/num_samples
+    print(acc)
+    return acc
 
 
 def predict_resnet(img):
@@ -68,7 +103,7 @@ def predict_resnet(img):
             return sess.run(_model, feed_dict)[0]
 
 if __name__=="__main__":
-    train(5, train_data_root)
+    train(5, train_data_root, val_data_root)
     #print("Hello")
     #img = cv2.imread("img.jpeg")
     #img = cv2.resize(img, (224, 224))
