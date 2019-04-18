@@ -42,7 +42,7 @@ def load_and_preprocess_img(path):
     img = tf.read_file(path)
     return preprocess_image(img)
 
-def gen_dataset(img_paths, label_imgs, batch_size=32):
+def gen_dataset(img_paths, label_imgs, batch_size=4):
     path_ds = tf.data.Dataset.from_tensor_slices(img_paths)
     image_ds = path_ds.map(load_and_preprocess_img)
     label_ds = tf.data.Dataset.from_tensor_slices(tf.cast(label_imgs, tf.int64))
@@ -54,7 +54,7 @@ def gen_dataset(img_paths, label_imgs, batch_size=32):
     ds = ds.prefetch(buffer_size=len(img_paths))
     return ds
 
-def load_and_get_iter_dataset(data_root, batch_size=32):
+def load_and_get_iter_dataset(data_root, batch_size=16):
     data_paths, img_labels = get_img_paths(data_root)
     len_data = len(data_paths)
     ds = gen_dataset(data_paths, img_labels, batch_size)
